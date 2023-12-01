@@ -13,6 +13,7 @@ public:
 class  Hash_Table {
 	std::vector<std::vector<Table_element>> Table;
 	size_t Size_table;
+	size_t Quantity_Elements = 0;
 
 	int hash_function(const std::string& _name) {
 		int sum = 0;
@@ -42,6 +43,7 @@ class  Hash_Table {
 		Table.resize(Size_table);
 		while (file >> name) {
 			insert(name);
+			Quantity_Elements++;
 		}
 		file.close();
 	}
@@ -66,6 +68,8 @@ public:
 	void insert(std::string _name) {
 		Table_element _element(_name);
 		int index = hash_function(_name);
+		if (Quantity_Elements > 2 * Size_table)
+			expand(Quantity_Elements);
 
 		if (Table[index].empty())
 			Table[index].push_back(_element);
@@ -76,6 +80,7 @@ public:
 				free_pos++;
 			Table[index].push_back(_element);
 		}
+		Quantity_Elements++;
 	}
 
 	void deleted_elements(std::string _name) {
@@ -83,7 +88,8 @@ public:
 		for (auto& elementItem : Table[index]) {
 			if (_name == elementItem.Name) {
 				elementItem.be_deleted = true;
-				break;
+				Quantity_Elements--;
+				return;
 			}
 		}
 		std::cerr << "Error: Element not found." << std::endl;
