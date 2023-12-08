@@ -3,65 +3,71 @@
 #include <string>
 #include <stack>
 
-struct TreeNode
-{
+int rank(int number) {
+    int count = 0;
+    while (number > 0) {
+        number /= 10;
+        count++;
+    }
+
+    return count;
+}
+
+struct TreeNode {
     int value;
     TreeNode* left;
     TreeNode* right;
 
-    TreeNode(int _value) : value(_value), left(nullptr), right(nullptr) {}
+    TreeNode(int _value, TreeNode* _left = nullptr, TreeNode* _right = nullptr) : value(_value), left(_left), right(_right) {}
 };
 
 class BinaryTree {
 private:
     TreeNode* root;
 
-    void insertIntoTree(TreeNode*& root, int value) {
-        if (root == nullptr) {
-            root = new TreeNode(value);
-        }
-        else {
-            if (value < root->value) {
-                insertIntoTree(root->left, value);
-            }
-            else {
-                insertIntoTree(root->right, value);
-            }
-        }
-    }
+    void parseAndBuild(TreeNode*& _root, const std::string& str, size_t& index) {
+        static int _value = 0;
 
-    void buildTreeFromString(TreeNode*& root, const std::string& str, size_t& index) {
-        while (index < str.size() && (str[index] == ' ' || str[index] == ',')) {
-            index++;
-        }
-        if (index == str.size() || str[index] == ')') {
-            return;
-        }
-        int value = 0;
-        while (index < str.size() && std::isdigit(str[index])) {
-            value = value * 10 + (str[index] - '0');
-            index++;
-        }
-        insertIntoTree(root, value);
-        if (index < str.size() && str[index] == '(') {
-            index++;
-            buildTreeFromString(root->left, str, index);
-        }
+        while (index < str.size()) {
+            while (index < str.size() && isdigit(str[index])) {
+                _value = _value * 10 + (str[index] - '0');
+                index++;
+            }
 
-        if (index < str.size() && str[index] == ',') {
+            if (_value != 0) {
+                TreeNode* newNode = new TreeNode(_value);
+                if (_root == nullptr) {
+                    _root = newNode;
+                }
+
+                if (index < str.size() && str[index] == '(') {
+                    _value = 0;
+                    index++;
+                    parseAndBuild(newNode->left, str, index);
+                }
+
+                if (index < str.size() && str[index] == ',') {
+                    _value = 0;
+                    index++;
+                    parseAndBuild(newNode->right, str, index);
+                }
+            }
+
+            if (index < str.size() && str[index] == ')') {
+                index++;
+                return;
+            }
+
             index++;
-            buildTreeFromString(root->right, str, index);
         }
-        index++; // Увеличение index на ')' после обработки поддерева
     }
 
 public:
     BinaryTree(std::string _path) : root(nullptr) {
         std::string treeString = readTree(_path);
-        std::cout << treeString << '\n';
         size_t index = 0;
-
-        buildTreeFromString(root, treeString, index);
+        std::cout << treeString << '\n';
+        parseAndBuild(root, treeString, index);
     }
 
     void rightRecursive() {
@@ -82,6 +88,12 @@ public:
         std::cout << '\n';
     }
 
+    void NotRecursive() {
+        std::cout << "NotRecursive Traversal: ";
+        NotRecursive(root);
+        std::cout << '\n';
+    }
+
 private:
     std::string readTree(const std::string& _path) {
         std::ifstream file(_path);
@@ -93,6 +105,7 @@ private:
         std::string _tree;
         std::getline(file, _tree);
         file.close();
+        _tree.erase(std::remove(_tree.begin(), _tree.end(), ' '), _tree.end());
         if (!_tree.empty() && isWithoutMistake(_tree))
             return _tree;
         else {
@@ -142,6 +155,27 @@ private:
         endedRecursive(node->right);
         std::cout << node->value << " ";
     }
+
+    void NotRecursive(TreeNode* node) {
+        if (node == nullptr)
+            return;
+
+        std::stack<TreeNode*> stack;
+        stack.push(node);
+
+        while (!stack.empty()) {
+            TreeNode* current = stack.top();
+            stack.pop();
+
+            std::cout << current->value << " ";
+
+            if (current->right)
+                stack.push(current->right);
+
+            if (current->left)
+                stack.push(current->left);
+        }
+    }
 };
 
 int main() {
@@ -149,6 +183,7 @@ int main() {
     tree.rightRecursive();
     tree.centerRecursive();
     tree.endedRecursive();
+    tree.NotRecursive();
 
     return 0;
 }
