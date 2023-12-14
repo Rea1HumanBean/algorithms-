@@ -73,27 +73,6 @@ private:
         preOrderRecursive(node->right);
     }
 
-    void preOrderNonRecursive(TreeNode* node) {
-        if (node == nullptr)
-            return;
-
-        std::stack<TreeNode*> stack;
-        stack.push(node);
-
-        while (!stack.empty()) {
-            TreeNode* current = stack.top();
-            stack.pop();
-
-            std::cout << current->value << " ";
-
-            if (current->right)
-                stack.push(current->right);
-
-            if (current->left)
-                stack.push(current->left);
-        }
-    }
-
     std::string readTree(const std::string& _path) {
         std::ifstream file(_path);
         if (!file.is_open()) {
