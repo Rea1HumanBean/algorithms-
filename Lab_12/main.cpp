@@ -1,113 +1,153 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
 #include <algorithm>
-#include <iterator>
-#include <string>
-#include <random>
+#include <fstream>
+#include <cstdio>
+#include <sstream>
+#include <vector>
 
-// Function to generate the input file with random numbers
-void generateInputFile(const std::string& inputFileName, int totalNumbers) {
-    std::ofstream inputFile(inputFileName);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(1, 100);
+class multiphase {
+    std::vector<std::fstream> fileArray;
+    std::string filename = "Auxiliary files/";
+    size_t quantityAuxArray = 0;
 
-    for (int i = 0; i < totalNumbers; ++i) {
-        inputFile << dis(gen) << " ";
-    }
-}
-
-// Function to split the input file into separate chunks and sort them
-void splitAndSortChunks(const std::string& inputFileName, int chunkSize) {
-    std::ifstream inputFile(inputFileName);
-    int chunkNumber = 1;
-
-    while (!inputFile.eof()) {
-        std::vector<int> chunk;
-        chunk.reserve(chunkSize);
-
-        for (int i = 0; i < chunkSize; ++i) {
-            int number;
-            if (inputFile >> number) {
-                chunk.push_back(number);
-            }
-            else {
-                break;
-            }
-        }
-
-        std::sort(chunk.begin(), chunk.end());
-
-        std::ofstream outputFile("chunk" + std::to_string(chunkNumber++) + ".txt");
-        std::copy(chunk.begin(), chunk.end(), std::ostream_iterator<int>(outputFile, " "));
-    }
-}
-
-// Function to merge sorted chunks into the final output file
-void mergeChunks(const std::string& outputFileName, int chunkSize, int totalChunks) {
-    std::vector<std::ifstream> chunkFiles;
-    chunkFiles.reserve(totalChunks);
-
-    for (int i = 1; i <= totalChunks; ++i) {
-        chunkFiles.emplace_back("chunk" + std::to_string(i) + ".txt");
-    }
-
-    std::vector<int> chunkBuffer(chunkSize);
-    std::vector<bool> chunkEmpty(totalChunks, false);
-    std::ofstream outputFile(outputFileName);
-
-    while (true) {
-        int minChunkIndex = -1;
-        for (int i = 0; i < totalChunks; ++i) {
-            if (!chunkEmpty[i]) {
-                if (minChunkIndex == -1 || chunkBuffer[i] < chunkBuffer[minChunkIndex]) {
-                    minChunkIndex = i;
+    void quickSort(std::vector<int>& arr, int start, int end) {
+        if (start < end) {
+            int current = start;
+            for (size_t i = start + 1; i <= end; i++) {
+                if (arr[i] < arr[start]) {
+                    current++;
+                    std::swap(arr[current], arr[i]);
                 }
             }
-        }
+            std::swap(arr[start], arr[current]);
 
-        if (minChunkIndex == -1) {
-            // All chunks have been merged
-            break;
-        }
-
-        outputFile << chunkBuffer[minChunkIndex] << " ";
-
-        if (chunkFiles[minChunkIndex] >> chunkBuffer[minChunkIndex]) {
-            chunkEmpty[minChunkIndex] = false;
-        }
-        else {
-            chunkEmpty[minChunkIndex] = true;
+            quickSort(arr, start, current - 1);
+            quickSort(arr, current + 1, end);
         }
     }
 
-    // Close all chunk files
-    for (auto& chunkFile : chunkFiles) {
-        chunkFile.close();
+    void sortedFileArray(std::vector<std::fstream>& Array) {
+        for (size_t i = 0; i < Array.size(); i++)
+            sortedInFile(Array[i]);
+
+        sortedFiles(Array);
     }
-}
 
-void multiPhaseSort(const std::string& inputFileName, const std::string& outputFileName, int chunkSize) {
-    splitAndSortChunks(inputFileName, chunkSize);
+    void sortedInFile(std::fstream& _file) {
+        std::vector<int> integers;
+        std::string line;
+        while (std::getline(_file, line))
+            integers.emplace_back(std::stoi(line));
 
-    // Count the number of chunks
-    std::ifstream inputFile(inputFileName);
-    int totalNumbers = std::distance(std::istream_iterator<int>(inputFile), std::istream_iterator<int>());
-    int totalChunks = (totalNumbers + chunkSize - 1) / chunkSize;
+        quickSort(integers, 0, integers.size() - 1);
 
-    mergeChunks(outputFileName, chunkSize, totalChunks);
-}
+        _file.clear();
+        _file.seekp(0);
+        for (const auto& sortedLine : integers)
+            _file << sortedLine << '\n';
+    }
+
+    void sortedFiles(std::vector<std::fstream>& Array) {
+        std::string line, other_line;
+        std::fstream _buble("Data/SortArray.txt", std::ios::out | std::ios::trunc);
+
+        for (size_t i = 1; i < Array.size(); i++) {
+            Array[i].seekp(0);
+
+            while (std::getline(Array[i], line)) {
+                int value;
+                std::istringstream(line) >> value;
+
+                bool add = true;
+
+                Array[0].clear();
+                Array[0].seekg(0);
+                Array[0].seekp(0);
+
+                while (std::getline(Array[0], other_line)) {
+                    int other_value;
+
+                    std::istringstream(other_line) >> other_value;
+
+                    if (value < other_value && add) {
+                        add = false;
+                        _buble << line << '\n';
+                    }
+                    _buble << other_line << '\n';
+                }
+                if (add)
+                    _buble << line << '\n';
+
+                Array[0].seekp(0);
+                _buble.seekg(0);
+                Array[0].close();
+
+                std::ifstream bubleReader("Data/SortArray.txt");
+                Array[0].open(filename + "0.txt");
+
+                while (std::getline(bubleReader, line))
+                    Array[0] << line << '\n';
+
+                bubleReader.close();
+
+                std::ofstream clearBuble("Data/SortArray.txt", std::ios::trunc);
+                clearBuble.close();
+            }
+        }
+
+        std::ofstream sortedArray("Data/SortArray.txt");
+        Array[0].open(filename + "0.txt");
+        Array[0].clear();
+        Array[0].seekg(0);
+        Array[0].seekp(0);;
+
+        while (std::getline(Array[0], line)) {
+            sortedArray << line << '\n';
+        }
+        sortedArray.close();
+    }
+
+public:
+    multiphase(std::string _path) {
+        std::fstream Main_array(_path);
+        size_t step = 0;
+        std::string filenameAuxArray = filename + std::to_string(quantityAuxArray) + ".txt";
+        std::ofstream Auxiliary_array(filenameAuxArray);
+
+        std::string line;
+        while (std::getline(Main_array, line)) {
+            if (step == 4) {
+                Auxiliary_array.close();
+                fileArray.emplace_back(filenameAuxArray);
+
+                quantityAuxArray++;
+                filenameAuxArray = filename + std::to_string(quantityAuxArray) + ".txt";
+                Auxiliary_array.open(filenameAuxArray);
+
+                step = 0;
+            }
+            Auxiliary_array << line << '\n';
+            step++;
+        }
+        if (step != 0) {
+            Auxiliary_array.close();
+            fileArray.emplace_back(filenameAuxArray);
+        }
+        sortedFileArray(fileArray);
+    }
+
+    ~multiphase() {
+        int i = 0;
+        std::string name;
+        for (auto& file : fileArray) {
+            file.close();
+            name = filename + std::to_string(i) + ".txt";
+            std::remove(name.c_str());
+            i++;
+        }
+    }
+};
 
 int main() {
-    std::string inputFileName = "input.txt";
-    std::string outputFileName = "output.txt";
-    int chunkSize = 5;
-    int totalNumbers = 20;
-
-    generateInputFile(inputFileName, totalNumbers);
-
-    multiPhaseSort(inputFileName, outputFileName, chunkSize);
-
+    multiphase array("Data/Array.data");
     return 0;
 }
