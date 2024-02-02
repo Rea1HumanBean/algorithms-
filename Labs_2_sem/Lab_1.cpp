@@ -20,7 +20,7 @@ void sort_Insertion(std::vector<Point>& _arr) {
 	}
 }
 
-double calck_Angle(Point _a, Point _b, Point _c) { //Высчитываем угол между точками
+double calc_Angle(Point _a, Point _b, Point _c) { //Г‚Г»Г±Г·ГЁГІГ»ГўГ ГҐГ¬ ГіГЈГ®Г« Г¬ГҐГ¦Г¤Гі ГІГ®Г·ГЄГ Г¬ГЁ
 	double angle_rad;
 
 	double ux = _b.x - _a.x;
@@ -44,33 +44,31 @@ double calck_Angle(Point _a, Point _b, Point _c) { //Высчитываем угол между точк
 	return angle_deg;
 };
 
-int orientation(Point p, Point q, Point r) {//определаю направление вектора 
+int orientation(Point p, Point q, Point r) {//Г®ГЇГ°ГҐГ¤ГҐГ«Г Гѕ Г­Г ГЇГ°Г ГўГ«ГҐГ­ГЁГҐ ГўГҐГЄГІГ®Г°Г  
 	int pseudo_cross_product = (q.x - p.x) * (r.y - q.y) - (r.x - q.x) * (q.y - p.y);
 
 	if (pseudo_cross_product > 0) {
-		return 1;  //Поворот против часовой стрелке
+		return 1;  //ГЏГ®ГўГ®Г°Г®ГІ ГЇГ°Г®ГІГЁГў Г·Г Г±Г®ГўГ®Г© Г±ГІГ°ГҐГ«ГЄГҐ
 	}
 	else if (pseudo_cross_product < 0) {
-		return -1; // Поворот g часовой стрелке
+		return -1; // ГЏГ®ГўГ®Г°Г®ГІ g Г·Г Г±Г®ГўГ®Г© Г±ГІГ°ГҐГ«ГЄГҐ
 	}
 	else {
-		return 0; // Векторы коллинеарны
+		return 0; // Г‚ГҐГЄГІГ®Г°Г» ГЄГ®Г«Г«ГЁГ­ГҐГ Г°Г­Г»
 	}
 }
 
 void chain(std::stack<Point>& Shell, std::vector<Point>& _arr, int _a, int _b) {
 	int i = 0, angl = 0;
-
 	for (int j = 0; j < _arr.size(); j++) {
-		int _angl = calck_Angle(_arr[_a], _arr[_b], _arr[j]);
+		int _angl = calc_Angle(_arr[_a], _arr[_b], _arr[j]);
 		if ((orientation(_arr[_a], _arr[_b], _arr[j]) > 0) && _angl > angl) {
 			angl = _angl;
 			i = j;
 		}
 	}
-
-	std::cout << angl << '-' << i << std::endl;
 	if (i != 0) {
+		std::cout << angl << '-' << _arr[i].x << ' ' << _arr[i].y << std::endl;
 		Shell.push(_arr[i]);
 		chain(Shell, _arr, _b, i);
 	}
@@ -88,13 +86,21 @@ std::stack<Point> build_Shell(std::vector<Point>& _arr) {
 
 int main() {
 	std::vector<Point> PointArray = { {3,3}, {2,-4}, {0,0}, {4,2}, {6,1}, {2,5}, {7,5}, {10,0}, {0,2} };
+	PointArray = { {0,0}, {0,100}, {100,0}, {50,50}, {8,0}, {4,0}, {7,0}, {0,13}, {12,25} };
 	sort_Insertion(PointArray);
 
 	std::stack<Point> Shell = build_Shell(PointArray);
-	if(Shell.size() > 2){
-		std::cout<< "Shell created"<<std::endl;
-		for(int i = 0; i < Shell.size();i++)
-			std::cout << Shell[i].x <<' '<<Shell[i].y<<std::endl;
+	if (Shell.size() == 1) {;
+		Shell.push(PointArray[PointArray.size() - 1]);
+		chain(Shell, PointArray, 0, PointArray.size() - 1);
+	}
+
+	if (Shell.size() > 1) {
+		std::cout << "Shell created" << std::endl;
+		while (!Shell.empty()){
+			std::cout << Shell.top().x << ' ' << Shell.top().y << std::endl;
+			Shell.pop();
+		}
 	}
 
 	return 0;
