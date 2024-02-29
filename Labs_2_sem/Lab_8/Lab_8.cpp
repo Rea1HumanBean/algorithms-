@@ -6,15 +6,18 @@
 struct Vertex {
 	int dest;
 	int weight;
+	bool visited;
 };
 
 template <size_t Rows_Colm>
 class Graph {
 	int q_Vert;
 	std::vector <std::vector<Vertex>> adjList;
+	std::vector<bool> visited;
 
 	void addVertex(int src, int dest, int weight) {
 		Vertex vert;
+		vert.visited = false;
 		vert.dest = dest;
 		vert.weight = weight;
 		adjList[src].push_back(vert);
@@ -22,6 +25,7 @@ class Graph {
 public:
 	Graph() : q_Vert(Rows_Colm) {
 		adjList.resize(q_Vert);
+		visited.resize(q_Vert);
 	}
 
 	static Graph<Rows_Colm> create(std::initializer_list<std::initializer_list<int>> data) {
@@ -48,34 +52,31 @@ public:
 			std::cout << std::endl;
 		}
 	}
-	void BFS(int start_Vertex, std::vector<bool>& visited) {
-		std::queue<int> q;
-		q.push(start_Vertex);
-		visited[start_Vertex] = true;
+	void shortestPath_Dijkstra(int start_Vertex) {
+		std::vector<int> distance_Vert(q_Vert, std::numeric_limits<int>::max());
+		std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
 
-		while (!q.empty()) {
-			int v = q.front();
-			q.pop();
-			std::cout << v + 1 << " "; 
+		distance_Vert[start_Vertex] = 0;
+		pq.push({ 0, start_Vertex });
 
-			for (const auto& adjVertex : adjList[v]) {
-				if (!visited[adjVertex.dest]) {
-					q.push(adjVertex.dest);
-					visited[adjVertex.dest] = true;
+		while (!pq.empty()) {
+			int currentVertex = pq.top().second;
+			int currentDistance = pq.top().first;
+			pq.pop();
+
+			if (currentDistance > distance_Vert[currentVertex])
+				continue;
+
+			for (const auto& adjVertex : adjList[currentVertex]) {
+				int newDistance = currentDistance + adjVertex.weight;
+				if (newDistance < distance_Vert[adjVertex.dest]) {
+					distance_Vert[adjVertex.dest] = newDistance;
+					pq.push({ newDistance, adjVertex.dest });
 				}
 			}
 		}
-		std::cout << std::endl;
-	}
-
-	void findConnectedComponents() {
-		std::vector<bool> visited(q_Vert, false);
-
-		std::cout << "Компоненты связности:\n";
-		for (int v = 0; v < q_Vert; ++v) {
-			if (!visited[v]) {
-				BFS(v, visited);
-			}
+		for (int i = 0; i < q_Vert; ++i) {
+			std::cout << "Кратчайшее расстояние до вершины " << i + 1 << ": " << distance_Vert[i] << std::endl;
 		}
 	}
 };
@@ -84,20 +85,17 @@ public:
 int main() {
 	setlocale(LC_ALL, "ru");
 
-	auto graph = Graph<9>::create({
-		{0, 1, 6, 0, 0, 0, 0, 0, 0},
-		{1, 0, 0, 3, 9, 0, 0, 0, 0},
-		{6, 0, 0, 2, 0, 0, 0, 0, 0},
-		{0, 3, 2, 0, 2, 0, 0, 0, 0},
-		{0, 9, 0, 2, 0, 3, 0, 0, 0},
-		{0, 0, 0, 0, 3, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0 ,5},
-		{0, 0, 0, 0, 0, 0, 0, 5, 0}
+	auto graph = Graph<6>::create({
+		{0, 1, 6, 0, 0, 0},
+		{1, 0, 0, 3, 9, 0},	
+		{6, 0, 0, 2, 0, 0},
+		{0, 3, 2, 0, 2, 0},
+		{0, 9, 0, 2, 0, 3},
+		{0, 0, 0, 0, 3, 0},
 		});
 
 
 	graph.printGraph();
-	graph.findConnectedComponents();
+	graph.shortestPath_Dijkstra(0);
 	return 0;
 }
