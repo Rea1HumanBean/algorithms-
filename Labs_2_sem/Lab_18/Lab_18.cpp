@@ -3,28 +3,38 @@
 #include <algorithm>
 #include <cmath>
 
-bool subsetSumZero(const std::vector<int>& numbers) {
-    std::vector<int> S = { 0 };
-
-    for (int x : numbers) {
-        std::vector<int> newS;
-
-        for (int y : S) {
-            int sum = x + y;
-            if (sum == 0) {
-                return true;
+void  sort(std::vector<int>& _arr) {
+    for (int step = _arr.size() / 2; step > 0; step /= 2) {
+        for (int i = step; i < _arr.size(); ++i) {
+            int temp = _arr[i];
+            int j;
+            for (j = i; j >= step && abs(_arr[j - step]) < abs(temp); j -= step) {
+                _arr[j] = _arr[j - step];
             }
-            newS.push_back(sum);
+            _arr[j] = temp;
         }
-
-        S.insert(S.end(), newS.begin(), newS.end());
     }
+};
 
+bool subsetSumZero(std::vector<int>& numbers) {
+
+    for (int i = 0; i < numbers.size() - 1; ++i) {
+        int sum = numbers[i];
+        for (int j = i + 1; j < numbers.size(); ++j) {
+            if (abs(sum) > abs(sum + numbers[j])) {
+                sum += numbers[j];
+            }
+        }
+        if (sum == 0)
+            return true;
+    }
     return false;
 }
 
 int main() {
-    std::vector<int> numbers = { -7, 5, -3, -2, 8 };
+    std::vector<int> numbers = { -7, -1, -2, 8 };
+
+    sort(numbers);
 
     if (subsetSumZero(numbers)) {
         std::cout << "Yes,there sum exists" << std::endl;
