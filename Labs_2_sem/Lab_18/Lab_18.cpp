@@ -32,7 +32,7 @@ bool subsetSumZero(std::vector<int>& numbers) {
 }
 
 int main() {
-    std::vector<int> numbers = { -7, -1, -2, 8 };
+    std::vector<int> numbers = { -7, -3, 10, 4 };
 
     sort(numbers);
 
