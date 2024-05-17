@@ -1,38 +1,35 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <climits>
 
 int minBoxesDP(std::vector<int>& items, int boxCapacity) {
     int n = items.size();
     if (n == 0)
         return 0;
 
-    std::sort(items.rbegin(), items.rend());
+    std::sort(items.begin(), items.end());
 
-    int minNumBoxes = 0;
-    while (!items.empty()) {
-        int curCap = 0;
-        std::vector<int> selectedItems;
+    std::vector<int> dp(boxCapacity + 1, INT_MAX);
+    dp[0] = 0;
 
-        for (int i = 0; i < items.size(); i++) {
-            if (curCap + items[i] <= boxCapacity) {
-                curCap += items[i];
-                selectedItems.push_back(items[i]);
+    for (int i = 1; i <= boxCapacity; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (items[j] <= i && dp[i - items[j]] != INT_MAX) {
+                dp[i] = std::min(dp[i], dp[i - items[j]] + 1);
             }
         }
+    }
 
-        for (int item : selectedItems) {
-            auto it = std::find(items.begin(), items.end(), item);
-            if (it != items.end()) {
-                items.erase(it);
-            }
-        }
-        minNumBoxes++;
+    int minNumBoxes = INT_MAX;
+    for (int i = 0; i < n; ++i) {
+        if (items[i] > boxCapacity)
+            return n;
+        minNumBoxes = std::min(minNumBoxes, dp[boxCapacity - items[i]]);
     }
 
     return minNumBoxes;
 }
-
 
 int main() {
     std::vector<int> items = { 1, 1, 2, 2, 2, 2, 7 };
