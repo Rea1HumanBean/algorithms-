@@ -1,38 +1,43 @@
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
-std::vector<int> prefFunc(const std::string& pattern) {
+std::vector<int> computeTransitionTable(const std::string& pattern) {
     int m = pattern.size();
-    std::vector<int> func(m + 1, 0);
-    func[0] = -1;
+    std::vector<int> transition(m + 1, 0);
+    transition[0] = -1;
     int k = -1;
     for (int q = 1; q <= m; ++q) {
-        while (k >= 0 && pattern[k] != pattern[q - 1])
-            k = func[k];
-        func[q] = ++k;
+        while (k >= 0 && pattern[k] != pattern[q - 1]) {
+            k = transition[k];
+        }
+        k++;
+        transition[q] = k;
     }
-    return func;
+    return transition;
 }
 
 void searchPattern(const std::string& text, const std::string& pattern) {
     int n = text.size();
     int m = pattern.size();
-    std::vector<int> func = prefFunc(pattern);
+    std::vector<int> transition = computeTransitionTable(pattern);
     int q = 0;
     for (int i = 0; i < n; ++i) {
-        while (q >= 0 && pattern[q] != text[i])
-            q = func[q];
-        if (++q == m) {
+        while (q >= 0 && pattern[q] != text[i]) {
+            q = transition[q];
+        }
+        q++;
+        if (q == m) {
             std::cout << "Pattern found at index " << i - m + 1 << std::endl;
-            q = func[q];
+            q = transition[q];
         }
     }
 }
 
 int main() {
-    std::string text = "ababcababcabca";
-    std::string pattern = "ababc";
+    std::string text = "ababcababcabcabc";
+    std::string pattern = "abcabc";
+
     searchPattern(text, pattern);
     return 0;
 }
